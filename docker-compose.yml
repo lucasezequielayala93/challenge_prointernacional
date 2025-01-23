@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_challenge
+    restart: unless-stopped
+    working_dir: /var/www
+    expose:
+      - 9000
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_challenge
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www
+      - ./nginx:/etc/nginx/conf.d/
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0.0
+    container_name: db_challenge
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      SERVICE_NAME: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
+    driver: local
